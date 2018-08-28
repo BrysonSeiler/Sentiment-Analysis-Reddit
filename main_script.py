@@ -15,12 +15,11 @@ def main():
 
     num_submissions = 1
     num_comments = 1
-    reply_depth = 1
 
     posts, comments = cs.gather_comments(bot, subreddit_name, num_submissions, num_comments)
 
     stat.analyze_post_sentiment(posts)
-    stat.analyze_comment_sentiment(comments)
+    #stat.analyze_comment_sentiment(comments)
 
     
 

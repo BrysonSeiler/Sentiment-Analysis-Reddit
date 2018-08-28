@@ -40,36 +40,38 @@ def gather_comments(bot, subreddit_name, num_submissions, num_comments):
 
     for post in subreddit.controversial('all', limit=num_submissions):
 
+        #Lets you gather replies to comments
+        post.comments.replace_more(limit=5)
+
+        #Get the votes for the post
         post_votes = get_votes(post)
 
-        #print(post.title)
+        #Parse the post title
         post_title_blob = TextBlob(clean(post.title))
+
+        #Parse the self-text for the post
         post_self_text_blob = TextBlob(clean(post.selftext))
 
-        #pprint(post_self_text_blob)
-
+        #Gather sentiment for title and self-text
         post_sentiment['title'] = post_title_blob.sentiment_assessments
         post_sentiment['self_text'] = post_self_text_blob.sentiment_assessments
 
+        #Append post object to list of posts
         posts.append(Post(post_title_blob, post_self_text_blob, post_sentiment, post_votes))
 
         for comment in post.comments[:num_comments]:
 
-            if isinstance(comment, MoreComments):
-                continue
-
+            #Get the votes for the comment
             comment_votes = get_votes(comment)
 
-            comment_blob = TextBlob(clean(comment.body))
+            #Parse the comment
+            comment_blob = TextBlob(clean(post.title))
 
-            for reply in comment.replies:
-
-                reply_blob = TextBlob(clean(reply.body))
-                reply_votes = get_votes(reply)
-
-                replies.append(Reply(clean(reply.body), reply_blob, reply_votes))
-
-            comments.append(Comment(comment_blob, comment.replies, comment_blob.sentiment_assessments, comment_votes))
+            #Gather replies for the comment
+            replies = get_replies(comment)
+            
+            #Append comment object to list of comments 
+            comments.append(Comment(comment_blob, replies, comment_blob.sentiment_assessments, comment_votes))
 
     return posts, comments
 
@@ -79,6 +81,8 @@ def get_subreddit(bot, subreddit_name):
 
 def get_votes(text):
 
+    pprint(vars(text))
+
     vote = {}
 
     vote['up'] = text.ups
@@ -86,6 +90,23 @@ def get_votes(text):
     vote['score'] = text.score
 
     return vote
+
+def get_replies(comment):
+
+    replies = []
+
+    for reply in comment.replies:
+
+        reply_sentiment = {}
+
+        reply_votes = get_votes(reply)
+        reply_blob = TextBlob(clean(reply.body))
+
+        reply_sentiment['reply'] = reply_blob.sentiment_assessments
+        
+        replies.append(Reply(reply_blob, reply_sentiment, reply_votes))
+
+    return replies
 
 def clean(post):
 
