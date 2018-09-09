@@ -29,7 +29,7 @@ class Post:
         self.sentiment = sentiment
         self.votes = votes
 
-def gather_comments(bot, subreddit_name, num_submissions, num_comments):
+def gather_comments(bot, subreddit_name, num_submissions, num_comments, get_comments):
 
     posts = []
     post_sentiment = {}
@@ -41,7 +41,7 @@ def gather_comments(bot, subreddit_name, num_submissions, num_comments):
     for post in subreddit.controversial('all', limit=num_submissions):
 
         #Lets you gather replies to comments
-        post.comments.replace_more(limit=5)
+        post.comments.replace_more(limit=1)
 
         #Get the votes for the post
         post_votes = get_votes(post)
@@ -58,20 +58,27 @@ def gather_comments(bot, subreddit_name, num_submissions, num_comments):
 
         #Append post object to list of posts
         posts.append(Post(post_title_blob, post_self_text_blob, post_sentiment, post_votes))
+        
+        post_sentiment = {}
 
-        for comment in post.comments[:num_comments]:
+        if get_comments:
 
-            #Get the votes for the comment
-            comment_votes = get_votes(comment)
+            for comment in post.comments[:num_comments]:
 
-            #Parse the comment
-            comment_blob = TextBlob(clean(post.title))
+                #Get the votes for the comment
+                comment_votes = get_votes(comment)
 
-            #Gather replies for the comment
-            replies = get_replies(comment)
+                #Parse the comment
+                comment_blob = TextBlob(clean(post.title))
+
+                #Gather replies for the comment
+                replies = get_replies(comment)
             
-            #Append comment object to list of comments 
-            comments.append(Comment(comment_blob, replies, comment_blob.sentiment_assessments, comment_votes))
+                #Append comment object to list of comments 
+                comments.append(Comment(comment_blob, replies, comment_blob.sentiment_assessments, comment_votes))
+
+        else:
+            comments = []
 
     return posts, comments
 
@@ -80,8 +87,6 @@ def get_subreddit(bot, subreddit_name):
     return subreddit_obj
 
 def get_votes(text):
-
-    pprint(vars(text))
 
     vote = {}
 
